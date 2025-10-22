@@ -158,6 +158,16 @@ svg {
   transform: rotateY(180deg);
 }
 
+/* Make SVG and images transparent to pointer events for better mobile touch handling */
+.game__back-card svg,
+.game__back-card svg *,
+.game__front-card img {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .game__front-card img {
   border-radius: var(--radius-card);
   object-fit: cover;
