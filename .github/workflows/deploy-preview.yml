@@ -1,0 +1,124 @@
+name: Deploy Preview (Alternative)
+
+# This is an alternative, simpler workflow using peaceiris/actions-gh-pages
+# Enable this if you prefer a simpler setup. Disable deploy-pages.yml if using this.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build for main branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npm run build
+
+      - name: Build for PR preview
+        if: github.event_name == 'pull_request'
+        run: |
+          export BASE_PATH=/pr-${{ github.event.pull_request.number }}/
+          npm run build
+
+      - name: Deploy to GitHub Pages (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          keep_files: true
+          enable_jekyll: false
+          force_orphan: false
+
+      - name: Deploy PR Preview
+        id: deploy-preview
+        if: github.event_name == 'pull_request'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: pr-${{ github.event.pull_request.number }}
+          keep_files: true
+          enable_jekyll: false
+          force_orphan: false
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request' && steps.deploy-preview.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr_number = context.payload.pull_request.number;
+            const repo_name = context.repo.repo;
+            const owner = context.repo.owner;
+            const preview_url = `https://${owner}.github.io/${repo_name}/pr-${pr_number}/`;
+
+            const comment_body = `## 🚀 Preview Deployment Complete!
+
+            Your PR has been successfully deployed to GitHub Pages.
+
+            **Preview URL:** ${preview_url}
+
+            ### Pages:
+            - 🎮 [Game 1](${preview_url})
+            - 🎮 [Game 2](${preview_url}page-2.html)
+
+            The preview will be updated automatically when you push new commits.
+
+            **Note:** It may take 1-2 minutes for GitHub Pages to publish the changes.
+
+            ---
+            <sub>🤖 Deployed by [GitHub Actions](https://github.com/${owner}/${repo_name}/actions/runs/${{ github.run_id }})</sub>`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: owner,
+              repo: repo_name,
+              issue_number: pr_number,
+            });
+
+            const existingComment = comments.find(comment =>
+              comment.user.login === 'github-actions[bot]' &&
+              comment.body.includes('Preview Deployment')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: owner,
+                repo: repo_name,
+                comment_id: existingComment.id,
+                body: comment_body,
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: owner,
+                repo: repo_name,
+                issue_number: pr_number,
+                body: comment_body,
+              });
+            }

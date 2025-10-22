@@ -42,14 +42,42 @@ export class MemoryGame {
    * Initialize the game - set up event listeners
    */
   init() {
-    // Use event delegation for better performance
-    this.cardsContainer.addEventListener('click', (event) => {
+    // Track if we've handled a touch event to prevent double-firing with click
+    let touchHandled = false;
+
+    /**
+     * Unified handler for both click and touch events
+     * @param {Event} event - The click or touch event
+     */
+    const handleCardInteraction = (event) => {
+      // For touch events, set flag and reset after a short delay
+      if (event.type === 'touchend') {
+        touchHandled = true;
+        setTimeout(() => {
+          touchHandled = false;
+        }, 500);
+      }
+
+      // Skip click events if touch was just handled (prevents double-firing)
+      if (event.type === 'click' && touchHandled) {
+        return;
+      }
+
       const card = event.target.closest('.game__card');
 
       if (card && this.canFlipCard(card)) {
+        // Prevent default touch behavior and event propagation
+        if (event.type === 'touchend') {
+          event.preventDefault();
+        }
         this.flip(card);
       }
-    });
+    };
+
+    // Use event delegation for better performance
+    // Add both click and touch event listeners for cross-device compatibility
+    this.cardsContainer.addEventListener('click', handleCardInteraction);
+    this.cardsContainer.addEventListener('touchend', handleCardInteraction);
 
     // Add keyboard support for accessibility
     this.cards.forEach((card, index) => {

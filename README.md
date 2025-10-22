@@ -2,6 +2,8 @@
 
 A vanilla JavaScript memory card matching game with modern tooling and accessibility features.
 
+[![Deploy Preview](https://github.com/themarkness/margy-game/actions/workflows/deploy-preview.yml/badge.svg)](https://github.com/themarkness/margy-game/actions/workflows/deploy-preview.yml)
+
 ## Features
 
 - Pure vanilla JavaScript (no frameworks)
@@ -11,6 +13,7 @@ A vanilla JavaScript memory card matching game with modern tooling and accessibi
 - Responsive design
 - CSS custom properties for easy theming
 - Modern development tools (Vite, ESLint, Prettier)
+- Automated GitHub Pages deployment with PR previews
 
 ## Quick Start
 
@@ -118,6 +121,37 @@ const game = new MemoryGame({
   duration: 1000,      // Time before cards flip back
   shuffleDelay: 400,   // Delay for shuffle animation
 });
+```
+
+## Deployment
+
+This project is automatically deployed to GitHub Pages using GitHub Actions.
+
+### Live Demo
+
+- **Production:** `https://themarkness.github.io/margy-game/`
+- **PR Previews:** `https://themarkness.github.io/margy-game/pr-{number}/`
+
+### Automated Deployments
+
+- ✅ **Main branch** → Deployed to production automatically
+- ✅ **Pull Requests** → Preview deployments with unique URLs
+- ✅ **PR Comments** → Automatic comments with preview links
+- ✅ **Cleanup** → PR previews removed when PR is closed
+
+See [`.github/workflows/README.md`](.github/workflows/README.md) for setup instructions and configuration.
+
+### Manual Deployment
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build locally
+npm run preview
+
+# Build with custom base path
+BASE_PATH=/my-path/ npm run build
 ```
 
 ## Browser Support
