@@ -17,11 +17,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: gh-pages
+        continue-on-error: true
 
       - name: Remove PR preview directory
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           PR_DIR="pr-${PR_NUMBER}"
+
+          # Check if we successfully checked out gh-pages
+          if [ ! -d .git ]; then
+            echo "gh-pages branch doesn't exist yet, nothing to clean up"
+            exit 0
+          fi
 
           if [ -d "${PR_DIR}" ]; then
             echo "Removing preview directory: ${PR_DIR}"
