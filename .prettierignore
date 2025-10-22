@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Large HTML files with embedded SVG
+# (commented out - you may want to enable this if formatting breaks the SVG)
+# *.html
+
+# Logs
+*.log

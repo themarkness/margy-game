@@ -1,0 +1,28 @@
+{
+  "name": "margy-game",
+  "version": "1.0.0",
+  "description": "Margy Matching Memory Game - A vanilla JavaScript memory card game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.{js,css,html,md}\"",
+    "format:check": "prettier --check \"**/*.{js,css,html,md}\""
+  },
+  "keywords": [
+    "memory-game",
+    "vanilla-js",
+    "card-game",
+    "matching-game"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "vite": "^5.1.4"
+  }
+}

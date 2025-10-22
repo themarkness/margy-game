@@ -1,16 +1,9 @@
+import { DEFAULT_CONFIG, CSS_CLASSES, ARIA } from './config.js';
+
 /**
  * MemoryGame class - Handles the memory matching game logic
  */
-class MemoryGame {
-  /**
-   * Default configuration for the game
-   */
-  static DEFAULT_CONFIG = {
-    duration: 1000,
-    cardSelector: '.js-cards',
-    shuffleDelay: 400,
-  };
-
+export class MemoryGame {
   /**
    * @param {Object} config - Configuration options
    * @param {number} config.duration - Animation duration in ms
@@ -18,7 +11,7 @@ class MemoryGame {
    * @param {number} config.shuffleDelay - Delay before shuffle animation
    */
   constructor(config = {}) {
-    this.config = { ...MemoryGame.DEFAULT_CONFIG, ...config };
+    this.config = { ...DEFAULT_CONFIG, ...config };
 
     // Initialize game state
     this.gameState = {
@@ -31,7 +24,9 @@ class MemoryGame {
     this.cardsContainer = document.querySelector(this.config.cardSelector);
 
     if (!this.cardsContainer) {
-      throw new Error(`Cards container not found with selector: ${this.config.cardSelector}`);
+      throw new Error(
+        `Cards container not found with selector: ${this.config.cardSelector}`
+      );
     }
 
     this.cards = Array.from(this.cardsContainer.children);
@@ -59,7 +54,7 @@ class MemoryGame {
     // Add keyboard support for accessibility
     this.cards.forEach((card, index) => {
       card.setAttribute('tabindex', '0');
-      card.setAttribute('role', 'button');
+      card.setAttribute('role', ARIA.role.button);
       card.setAttribute('aria-label', `Card ${index + 1}`);
 
       card.addEventListener('keydown', (event) => {
@@ -79,19 +74,21 @@ class MemoryGame {
    * @returns {boolean}
    */
   canFlipCard(card) {
-    return !card.classList.contains('flipped') &&
-           !card.classList.contains('has-match') &&
-           !this.gameState.isProcessing;
+    return (
+      !card.classList.contains(CSS_CLASSES.flipped) &&
+      !card.classList.contains(CSS_CLASSES.matched) &&
+      !this.gameState.isProcessing
+    );
   }
 
   /**
    * Shuffle all cards and reset the game
    */
   shuffleCards() {
-    this.cards.forEach(card => {
+    this.cards.forEach((card) => {
       const randomNumber = Math.floor(Math.random() * this.cards.length) + 1;
 
-      card.classList.remove('has-match');
+      card.classList.remove(CSS_CLASSES.matched);
       card.setAttribute('aria-label', `Card ${randomNumber}`);
 
       setTimeout(() => {
@@ -110,11 +107,13 @@ class MemoryGame {
    * Check if all cards have been matched
    */
   checkAllCards() {
-    if (!this.cards.every(card => card.classList.contains('has-match'))) {
+    if (!this.cards.every((card) => card.classList.contains(CSS_CLASSES.matched))) {
       return;
     }
 
-    this.announceToScreenReader(`Congratulations! All cards matched in ${this.gameState.moves} moves!`);
+    this.announceToScreenReader(
+      `Congratulations! All cards matched in ${this.gameState.moves} moves!`
+    );
 
     setTimeout(() => {
       this.shuffleCards();
@@ -126,10 +125,10 @@ class MemoryGame {
    */
   stopEvent() {
     this.gameState.isProcessing = true;
-    this.cardsContainer.classList.add('no-event');
+    this.cardsContainer.classList.add(CSS_CLASSES.noEvent);
 
     setTimeout(() => {
-      this.cardsContainer.classList.remove('no-event');
+      this.cardsContainer.classList.remove(CSS_CLASSES.noEvent);
       this.gameState.isProcessing = false;
     }, this.config.duration);
   }
@@ -144,11 +143,11 @@ class MemoryGame {
     const secondAnimal = secondCard.dataset.animal;
 
     if (firstAnimal === secondAnimal) {
-      firstCard.classList.remove('flipped');
-      secondCard.classList.remove('flipped');
+      firstCard.classList.remove(CSS_CLASSES.flipped);
+      secondCard.classList.remove(CSS_CLASSES.flipped);
 
-      firstCard.classList.add('has-match');
-      secondCard.classList.add('has-match');
+      firstCard.classList.add(CSS_CLASSES.matched);
+      secondCard.classList.add(CSS_CLASSES.matched);
 
       firstCard.setAttribute('aria-label', `Card matched: ${firstAnimal}`);
       secondCard.setAttribute('aria-label', `Card matched: ${secondAnimal}`);
@@ -161,8 +160,8 @@ class MemoryGame {
       this.announceToScreenReader('No match. Cards will flip back.');
 
       setTimeout(() => {
-        firstCard.classList.remove('flipped');
-        secondCard.classList.remove('flipped');
+        firstCard.classList.remove(CSS_CLASSES.flipped);
+        secondCard.classList.remove(CSS_CLASSES.flipped);
       }, this.config.duration);
     }
   }
@@ -172,11 +171,11 @@ class MemoryGame {
    * @param {HTMLElement} selectedCard - The card to flip
    */
   flip(selectedCard) {
-    selectedCard.classList.add('flipped');
+    selectedCard.classList.add(CSS_CLASSES.flipped);
     this.gameState.moves++;
 
-    const flippedCards = this.cards.filter(card =>
-      card.classList.contains('flipped')
+    const flippedCards = this.cards.filter((card) =>
+      card.classList.contains(CSS_CLASSES.flipped)
     );
 
     if (flippedCards.length === 2) {
@@ -191,9 +190,9 @@ class MemoryGame {
    */
   announceToScreenReader(message) {
     const announcement = document.createElement('div');
-    announcement.setAttribute('role', 'status');
-    announcement.setAttribute('aria-live', 'polite');
-    announcement.className = 'sr-only';
+    announcement.setAttribute('role', ARIA.role.status);
+    announcement.setAttribute('aria-live', ARIA.live.polite);
+    announcement.className = CSS_CLASSES.srOnly;
     announcement.textContent = message;
 
     document.body.appendChild(announcement);
@@ -202,25 +201,24 @@ class MemoryGame {
       document.body.removeChild(announcement);
     }, 1000);
   }
-}
 
-// Initialize the game when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initGame);
-} else {
-  initGame();
-}
+  /**
+   * Get current game statistics
+   * @returns {Object} Game statistics
+   */
+  getStats() {
+    return {
+      moves: this.gameState.moves,
+      matches: this.gameState.matches,
+      totalPairs: this.cards.length / 2,
+      isComplete: this.cards.every((card) => card.classList.contains(CSS_CLASSES.matched)),
+    };
+  }
 
-function initGame() {
-  try {
-    const game = new MemoryGame();
-
-    // Expose game instance for debugging
-    if (typeof window !== 'undefined') {
-      window.memoryGame = game;
-    }
-  } catch (error) {
-    console.error('Failed to initialize game:', error);
-    alert('Failed to start the game. Please refresh the page.');
+  /**
+   * Reset the game
+   */
+  reset() {
+    this.shuffleCards();
   }
 }
